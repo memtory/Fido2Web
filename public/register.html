@@ -1,0 +1,165 @@
+<!DOCTYPE html>
+<html>
+    <html>
+        <head>
+            <title></title>
+            <link rel="stylesheet" href="./css/milligram.min.css">
+            <style>
+                html, body, .container, .row {
+                    height: 100%;
+                }
+        
+                .formcontainer {
+                    background: #f0f0f0;
+                    padding: 15px;
+                }
+        
+                .formcontainer form, .formcontainer fieldset{
+                    margin:0;
+                }
+        
+                .secretcontainer {
+                    background: #f0f0f0;
+                    padding: 15px;
+                }
+                #statusContainer {
+                    display: none;
+                }
+                
+            </style>
+        </head>
+<body>
+
+    <div class="container" id="statusContainer">
+        <div class="row row-center" >
+            <div class="column" >
+                <div class="formcontainer register">
+                    <h3><label">Registration Successful</label></h3>
+                    <p id="status_msg"></p>
+                </div>
+                <a href="register.html" id="toRegistration">Registration page</a> / <a href="login.html" id="toLogin">Login page</a>
+                   
+            </div>
+        </div>
+    </div>
+
+
+    <div class="container">
+        <div class="row row-center">
+            <div class="column" id="registerContainer">
+                <div class="formcontainer register">
+                    <h3>Register page</h3>
+                    <form id="register" onsubmit="return false">
+                      <fieldset>
+                        <!-- <label for="name">name</label> -->
+                        <input type="hidden" name="name" value="demo-user">
+                        <label for="username">username</label>
+                        <input type="text" name="username">
+                        <input type="hidden" name="displayName" value="demo-user"><br>
+
+                        <input class="button-primary" type="submit" value="Register">
+                      </fieldset>
+                    </form>
+
+                    <a href="login.html" id="toLogin">Login page</a>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        document.getElementById('register').addEventListener('submit', function(event) {
+            event.preventDefault();
+
+            let username    = this.username.value;
+            let displayName = this.displayName.value;
+
+            startPasswordlessEnrolment({username, displayName})
+                .then((serverResponse) => {
+                    if(serverResponse.status !== 'startFIDOEnrolmentPasswordless')
+                        throw new Error('Error registering user! Server returned: ' + serverResponse.errorMessage);
+
+                    return getMakeCredentialChallenge({'uv': true})
+                })
+                .then((makeCredChallenge) => {
+                    /*{
+                        "challenge": "YPpAQ5-8yw7ty1GxvZRoosKoYraXWpeNJ4jNffh-gy0",
+                        "rp": {
+                            "name": "digitalpocui.web.app"
+                        },
+                        "user": {
+                            "id": "pH4atM-uM2FlifiEVD5OtZnSrvxMcS1OXao8fEP6UFs",
+                            "name": "alice@example.com",
+                            "displayName": "Alice von Delingher"
+                        },
+                        "pubKeyCredParams": [
+                            { "type": "public-key", "alg": -7 },
+                            { "type": "public-key", "alg": -257 }
+                        ],
+                        "authenticatorSelection": {
+                            "userVerification": "required"
+                        },
+                        "status": "ok"
+                    }*/
+                    makeCredChallenge = preformatMakeCredReq(makeCredChallenge);
+                    return navigator.credentials.create({ 'publicKey': makeCredChallenge })
+                })
+                .then((newCredentialInfo) => {
+                    newCredentialInfo = publicKeyCredentialToJSON(newCredentialInfo)
+                    console.log(newCredentialInfo)
+
+                    return makeCredentialResponse(newCredentialInfo)
+                })
+                .then((serverResponse) => {
+                    if(serverResponse.status !== 'ok') {
+                        this.username.target.setCustomValidity("serverResponse.errorMessage")
+                        throw new Error('Error registering user! Server returned: ' + serverResponse.errorMessage);
+                    }
+                        
+
+                    document.getElementById("statusContainer").style.display = 'block';
+                    document.getElementById('registerContainer').style.display = 'none'
+                    document.getElementById("status_msg").innerHTML= JSON.stringify(serverResponse, null, 5);
+                    sendcredential(this.username, serverResponse.id)
+
+                })
+                .catch((error) => {
+                    this.username.setCustomValidity(error.errorMessage)
+                    this.username.reportValidity()
+                    console.log('FAIL', error)
+                })
+        })
+        
+        function sendcredential(username, credential) {
+
+            let xhr = new XMLHttpRequest();
+            let url = "https://stage.api.gateway.mastercard.com/digitalpoc/addCredential";
+            // let url = "http://localhost:8080/digitalpoc/addCredential";
+       
+            // open a connection
+            xhr.open("POST", url, true);
+ 
+            // Set the request header i.e. which type of content you are sending
+            xhr.setRequestHeader("Content-Type", "application/json");
+ 
+            // Create a state change callback
+            xhr.onreadystatechange = function () {
+                if (xhr.readyState === 4 && xhr.status === 200) {
+                     console.log( this.responseText);
+                 }
+            };
+ 
+            // Converting JSON data to string
+            var data = JSON.stringify({ "userName": username.value, "credential": credential });
+ 
+            // Sending data with the request
+            xhr.send(data);
+        }
+
+    </script>
+    <script src="../lib/base64url-arraybuffer.js"></script>
+    <script src="../lib/cbor.js"></script>
+    <script src="../lib/helpers.js"></script>
+    <script src="../lib/server.sample.js"></script>
+</body>
+</html>
