@@ -1,23 +1,25 @@
 {
-  "name": "com.fido2",
+  "name": "webauthn-tutorial",
   "version": "0.0.1",
-  "description": "fido accesslink",
-  "main": "index.html",
-  "scripts": {
-    "test": "echo \"Error: no test specified\" && exit 1"
+  "description": "",
+  "main": "app.js",
+  "dependencies": {
+    "base64url": "^2.0.0",
+    "body-parser": "^1.15.2",
+    "cbor": "^3.0.3",
+    "cookie-parser": "^1.4.3",
+    "cookie-session": "^2.0.0-beta.3",
+    "express": "^4.15.4"
   },
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/memtory/Fido2Web.git"
+    "url": "git+https://github.com/fido-alliance/"
   },
-  "author": "shakti.rathore@gmail.com",
-  "license": "ISC",
+  "private": true,
+  "author": "Yuriy Ackermann <yuriy@fidoalliance.org> (https://jeman.de/)",
   "bugs": {
-    "url": "https://github.com/memtory/Fido2Web/issues"
+    "url": "https://github.com/fido-alliance//issues",
+    "email": "yuriy@fidoalliance.org"
   },
-  "homepage": "https://github.com/memtory/Fido2Web#readme",
-  "dependencies": {
-    "firebase": "^9.6.10",
-    "firebase-tools": "^10.6.0"
-  }
+  "homepage": "https://github.com/fido-alliance/#readme"
 }
